@@ -76,6 +76,12 @@
           -d {{ certbot_domains|join(' -d ') }} \
           -m {{ certbot_email }}
       when: not certbot_stat.stat.exists
+
+    - name: Ensure that the certbot-renew.timer is enabled on boot
+      systemd:
+        name: certbot-renew.timer
+        state: started
+        enabled: yes
   tags: certbot
   become: true
   when:
