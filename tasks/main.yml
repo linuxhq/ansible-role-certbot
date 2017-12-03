@@ -1,0 +1,84 @@
+---
+- name: Ensure that the required variables are defined
+  tags: certbot
+  assert:
+    that:
+      - certbot_cloudflare_api_key is defined
+      - certbot_cloudflare_email is defined
+      - certbot_domains is defined
+      - certbot_domains|length > 0
+      - certbot_email is defined
+
+- name: Ensure that the certbot package is installed
+  tags: certbot
+  become: true
+  yum:
+    enablerepo: epel
+    name: certbot
+    state: present
+  register: certbot_yum
+
+- name: Creating required certbot directories
+  tags: certbot
+  become: true
+  file:
+    path: "{{ item.path }}"
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+    state: directory
+  register: certbot_mkdir
+  with_items:
+    - { path: "{{ certbot_basedir }}", mode: '0755' }
+    - { path: "{{ certbot_hookdir }}", mode: '0700' }
+  when: certbot_yum|success
+
+- name: Applying cloudflare authenticator and cleanup scripts
+  tags: certbot
+  become: true
+  template:
+    src: "{{ item|basename }}.j2"
+    dest: "{{ item }}"
+    owner: root
+    group: root
+    mode: 0700
+  register: certbot_hooks
+  with_items:
+    - "{{ certbot_manual_auth_hook }}"
+    - "{{ certbot_manual_cleanup_hook }}"
+  when:
+    - certbot_mkdir|success
+    - certbot_yum|success
+
+- block:
+    - name: Applying certbot sysconfig configuration
+      template:
+        src: certbot.sysconfig.j2
+        dest: /etc/sysconfig/certbot
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Determine if we need to apply for a new certificate
+      stat:
+        path: "{{ certbot_basedir }}/live/{{ certbot_domains|first }}/fullchain.pem"
+      register: certbot_stat
+
+    - name: Executing certbot using dns-01 and manual authentication hooks
+      shell: |
+        certbot certonly \
+          --agree-tos \
+          --manual \
+          --manual-auth-hook {{ certbot_manual_auth_hook }} \
+          --manual-cleanup-hook {{ certbot_manual_cleanup_hook }} \
+          --manual-public-ip-logging-ok \
+          --preferred-challenges=dns \
+          -d {{ certbot_domains|join(' -d ') }} \
+          -m {{ certbot_email }}
+      when: not certbot_stat.stat.exists
+  tags: certbot
+  become: true
+  when:
+    - certbot_hooks|success
+    - certbot_yum|success
+...

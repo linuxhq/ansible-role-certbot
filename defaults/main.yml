@@ -1,0 +1,6 @@
+---
+certbot_basedir: /etc/letsencrypt
+certbot_hookdir: "{{ certbot_basedir }}/manual-hooks"
+certbot_manual_auth_hook: "{{ certbot_hookdir }}/authenticator.sh"
+certbot_manual_cleanup_hook: "{{ certbot_hookdir }}/cleanup.sh"
+...
