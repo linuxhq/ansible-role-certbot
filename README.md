@@ -17,7 +17,7 @@ Available variables are listed below, along with default values:
     certbot_manual_auth_hook: "{{ certbot_hookdir }}/authenticator.sh"
     certbot_manual_cleanup_hook: "{{ certbot_hookdir }}/cleanup.sh"
 
-Additional configuration variables which are *required*:
+Additional configuration variables which are __**required**__:
 
     certbot_domains: []
     certbot_cloudflare_api_key: ''
