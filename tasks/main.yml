@@ -66,8 +66,8 @@
 - name: Attempting to execute certbot using dns challenge and manual authentication hooks
   tags: certbot
   become: true
-  shell: >
-    certbot certonly
+  shell: |
+    certbot certonly \
             --agree-tos --manual --manual-public-ip-logging-ok \
             --manual-auth-hook {{ certbot_manual_auth_hook }} \
             --manual-cleanup-hook {{ certbot_manual_cleanup_hook }} \
