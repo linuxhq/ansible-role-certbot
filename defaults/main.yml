@@ -1,6 +1,15 @@
 ---
+certbot_args:
+  - '--no-self-upgrade'
 certbot_basedir: /etc/letsencrypt
+certbot_cloudflare_api_key: ''
+certbot_cloudflare_email: ''
+certbot_domains: []
+certbot_email: root@localhost
 certbot_hookdir: "{{ certbot_basedir }}/manual-hooks"
 certbot_manual_auth_hook: "{{ certbot_hookdir }}/authenticator.sh"
 certbot_manual_cleanup_hook: "{{ certbot_hookdir }}/cleanup.sh"
+certbot_pre_hook: ''
+certbot_post_hook: ''
+certbot_renew_hook: ''
 ...

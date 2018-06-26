@@ -1,64 +1,6 @@
-## NOTE ##
-# If a hook is set here then it will be used for all
-# certificates and will override any per certificate
-# hook configuration in place.
+# {{ ansible_managed }}
 
-# Command to be run in a shell before obtaining any
-# certificates. Intended primarily for renewal, where it
-# can be used to temporarily shut down a webserver that
-# might conflict with the standalone plugin. This will
-# only be called if a certificate is actually to be
-# obtained/renewed. When renewing several certificates
-# that have identical pre-hooks, only the first will be
-# executed.
-#
-# An example to stop the MTA before updating certs would be
-# PRE_HOOK="--pre-hook 'systemctl stop postfix'"
-{% if certbot_pre_hook is defined %}
-PRE_HOOK="--pre-hook '{{ certbot_pre_hook }}'"
-{% else %}
-PRE_HOOK=""
-{% endif %}
-
-# Command to be run in a shell after attempting to
-# obtain/renew certificates. Can be used to deploy
-# renewed certificates, or to restart any servers that
-# were stopped by --pre-hook. This is only run if an
-# attempt was made to obtain/renew a certificate. If
-# multiple renewed certificates have identical post-
-# hooks, only one will be run.
-#
-# An example to restart httpd would be:
-# POST_HOOK="--post-hook 'systemctl restart httpd'"
-{% if certbot_post_hook is defined %}
-POST_HOOK="--post-hook '{{ certbot_post_hook }}'"
-{% else %}
-POST_HOOK=""
-{% endif %}
-
-# Command to be run in a shell once for each
-# successfully renewed certificate. For this command,
-# the shell variable $RENEWED_LINEAGE will point to the
-# config live subdirectory containing the new certs and
-# keys; the shell variable $RENEWED_DOMAINS will contain
-# a space-delimited list of renewed cert domains
-#
-# An example to run a script to alert each cert would be:
-# RENEW_HOOK="--renew-hook /usr/local/bin/cert-notifier.sh"
-{% if certbot_renew_hook is defined %}
-RENEW_HOOK="--renew-hook '{{ certbot_renew_hook }}'"
-{% else %}
-RENEW_HOOK=""
-{% endif %}
-
-# Any other misc arguments for the renewal
-# See certbot -h renew for full list
-#
-# An example to force renewal for certificates not due yet
-# CERTBOT_ARGS="--force-renewal"
-{% if certbot_args is defined %}
 CERTBOT_ARGS="{{ certbot_args|join(' ') }}"
-{% else %}
-CERTBOT_ARGS=""
-{% endif %}
-
+POST_HOOK="{{ "--post-hook '" + certbot_post_hook + "'" if certbot_post_hook|length > 0 else '' }}"
+PRE_HOOK="{{ "--pre-hook '" + certbot_pre_hook + "'" if certbot_pre_hook|length > 0 else '' }}"
+RENEW_HOOK="{{ "--renew-hook '" + certbot_renew_hook + "'" if certbot_renew_hook|length > 0 else '' }}"
