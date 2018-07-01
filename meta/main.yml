@@ -1,6 +1,7 @@
 ---
 dependencies: []
 galaxy_info:
+  role_name: certbot
   author: tkimball83
   description: RHEL/CentOS - Automatically enable HTTPS
   license: GPLv3
