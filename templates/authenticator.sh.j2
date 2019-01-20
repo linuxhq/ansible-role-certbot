@@ -5,7 +5,9 @@ API_KEY="{{ certbot_cloudflare_api_key }}"
 EMAIL="{{ certbot_cloudflare_email }}"
 
 # Strip only the top domain to get the zone id
-DOMAIN=$(expr match "$CERTBOT_DOMAIN" '.*\.\(.*\..*\)')
+COUNT=$(echo "$CERTBOT_DOMAIN" | grep -o "\." | wc -l)
+[ $COUNT -eq 1 ] && DOMAIN=$CERTBOT_DOMAIN
+[ $COUNT -ge 2 ] && DOMAIN=$(expr match "$CERTBOT_DOMAIN" '.*\.\(.*\..*\)')
 
 # Get the Cloudflare zone id
 ZONE_EXTRA_PARAMS="status=active&page=1&per_page=20&order=status&direction=desc&match=all"
