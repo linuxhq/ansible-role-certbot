@@ -6,7 +6,6 @@
     enablerepo: epel
     name: certbot
     state: present
-  register: certbot_yum
 
 - name: Attempting to overlay certbot configuration directories
   tags: certbot
@@ -17,28 +16,26 @@
     group: root
     mode: "{{ item.mode }}"
     state: directory
-  register: certbot_file
-  with_items:
+  loop:
     - { path: "{{ certbot_basedir }}", mode: '0755' }
     - { path: "{{ certbot_hookdir }}", mode: '0700' }
-  when: certbot_yum is success
+  loop_control:
+    label: "{{ item.path }}"
 
 - name: Attempting to overlay cloudflare authenticator and cleanup scripts
   tags: certbot
   become: true
   template:
-    src: "{{ item|basename }}.j2"
+    src: "{{ item|basename + '.j2' }}"
     dest: "{{ item }}"
     owner: root
     group: root
     mode: 0700
-  register: certbot_hooks
-  with_items:
+  loop:
     - "{{ certbot_manual_auth_hook }}"
     - "{{ certbot_manual_cleanup_hook }}"
-  when:
-    - certbot_file is success
-    - certbot_yum is success
+  loop_control:
+    label: "{{ item|basename }}"
 
 - name: Attempting to overlay certbot sysconfig configurations
   tags: certbot
@@ -49,19 +46,13 @@
     owner: root
     group: root
     mode: 0644
-  when: 
-    - certbot_hooks is success
-    - certbot_yum is success
 
 - name: Attempting to determine if we need to apply for a new certificate
   tags: certbot
   become: true
   stat:
-    path: "{{ certbot_basedir }}/live/{{ certbot_domains|first }}/fullchain.pem"
+    path: "{{ certbot_basedir + '/live/' + certbot_domains|first + '/fullchain.pem' }}"
   register: certbot_stat
-  when:
-    - certbot_hooks is success
-    - certbot_yum is success
 
 - name: Attempting to execute certbot using dns challenge and manual authentication hooks
   tags: certbot
@@ -74,10 +65,7 @@
             --preferred-challenges=dns \
             -d {{ certbot_domains|join(' -d ') }} \
             -m {{ certbot_email }}
-  when:
-    - certbot_hooks is success
-    - certbot_yum is success
-    - not certbot_stat.stat.exists
+  when: not certbot_stat.stat.exists
 
 - name: Ensure that certbot-renew is started and enabled on boot
   tags: certbot
@@ -86,7 +74,4 @@
     enabled: yes
     name: certbot-renew.timer
     state: started
-  when:
-    - certbot_hooks is success
-    - certbot_yum is success
 ...
